@@ -7,14 +7,24 @@ class AuthenticationScreen extends StatefulWidget {
   const AuthenticationScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() {
-    return _AuthenticationScreenState();
-  }
+  State<StatefulWidget> createState() => _AuthenticationScreenState();
 }
 
 class _AuthenticationScreenState extends State<AuthenticationScreen> {
+
+  @override
+  void initState() {
+    restoreEmailAddress();
+    super.initState();
+  }
+
   String? emailAddress;
   String? password;
+
+  Future<void> restoreEmailAddress() async {
+    final prefs = await SharedPreferences.getInstance();
+    emailAddress = prefs.getString("email");
+  }
 
   Future<void> signIn(Function(UserCredential) onSuccess) async {
     try {
@@ -61,6 +71,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
         children: [
           const _AuthenticationHeader(),
           TextInputWidget(
+            defaultValue: emailAddress,
             label: "Email",
             hintText: "example@email.com",
             onChanged: (emailAddress) =>
