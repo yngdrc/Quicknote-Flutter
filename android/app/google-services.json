@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "63684468164",
+    "project_id": "quicknote-f48a3",
+    "storage_bucket": "quicknote-f48a3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:63684468164:android:420912fb0cc93c39469891",
+        "android_client_info": {
+          "package_name": "app.aventurine.quicknote"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgxsdV1yfeXletntfSPdHRavC91xxTVvY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
