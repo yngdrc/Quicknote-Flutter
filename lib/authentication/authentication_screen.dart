@@ -11,26 +11,32 @@ class AuthenticationScreen extends StatefulWidget {
 }
 
 class _AuthenticationScreenState extends State<AuthenticationScreen> {
-
   @override
   void initState() {
     restoreEmailAddress();
     super.initState();
   }
 
-  String? emailAddress;
-  String? password;
+  String? _emailAddress;
+  String? _password;
+  final TextEditingController _emailAddressController = TextEditingController();
 
   Future<void> restoreEmailAddress() async {
     final prefs = await SharedPreferences.getInstance();
-    emailAddress = prefs.getString("email");
+    final cachedEmailAddress = prefs.getString("email");
+    if (cachedEmailAddress == null) {
+      return;
+    }
+
+    _emailAddressController.text = cachedEmailAddress;
+    _emailAddress = cachedEmailAddress;
   }
 
   Future<void> signIn(Function(UserCredential) onSuccess) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailAddress!, password: password!);
+          email: _emailAddress!, password: _password!);
 
       final userEmail = credential.user?.email;
       if (userEmail != null) {
@@ -49,19 +55,17 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool canLogin =
-        (emailAddress?.isNotEmpty ?? false) && (password?.isNotEmpty ?? false);
+    final bool canLogin = (_emailAddress?.isNotEmpty ?? false) &&
+        (_password?.isNotEmpty ?? false);
 
-    onPressed() =>
-        signIn((credential) =>
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) =>
-                    Text(
-                      "Logged in: ${credential.user?.email}",
-                    ),
+    onPressed() => signIn(
+          (credential) => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => Text(
+                "Logged in: ${credential.user?.email}",
               ),
             ),
+          ),
         );
 
     return Center(
@@ -71,16 +75,16 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
         children: [
           const _AuthenticationHeader(),
           TextInputWidget(
-            defaultValue: emailAddress,
+            controller: _emailAddressController,
             label: "Email",
             hintText: "example@email.com",
             onChanged: (emailAddress) =>
-                setState(() => this.emailAddress = emailAddress),
+                setState(() => _emailAddress = emailAddress),
           ),
           TextInputWidget(
             label: "Password",
             hintText: "********",
-            onChanged: (password) => setState(() => this.password = password),
+            onChanged: (password) => setState(() => _password = password),
             obscure: true,
           ),
           Padding(

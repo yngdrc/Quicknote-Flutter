@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:quicknote/colors/quicknote_colors.dart';
 
 class TextInputWidget extends StatelessWidget {
-  TextInputWidget(
+  const TextInputWidget(
       {super.key,
-      this.defaultValue,
+      this.controller,
       required this.label,
       required this.hintText,
       required this.onChanged,
       this.obscure = false});
 
-  final String? defaultValue;
+  final TextEditingController? controller;
   final String label;
   final String hintText;
   final void Function(String) onChanged;
@@ -37,7 +37,7 @@ class TextInputWidget extends StatelessWidget {
             ),
           ),
           TextField(
-            controller: TextEditingController(text: defaultValue),
+            controller: controller,
             obscureText: obscure,
             decoration: InputDecoration(
               filled: true,
