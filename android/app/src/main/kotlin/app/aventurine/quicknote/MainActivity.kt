@@ -1,4 +1,4 @@
-package com.example.quicknote
+package app.aventurine.quicknote
 
 import io.flutter.embedding.android.FlutterActivity
 
