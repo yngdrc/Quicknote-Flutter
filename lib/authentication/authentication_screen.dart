@@ -1,10 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:quicknote/widgets_common.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthenticationScreen extends StatefulWidget {
-  const AuthenticationScreen({super.key});
+  AuthenticationScreen({super.key});
+
+  final TextEditingController _emailAddressController = TextEditingController();
 
   @override
   State<StatefulWidget> createState() => _AuthenticationScreenState();
@@ -13,13 +16,12 @@ class AuthenticationScreen extends StatefulWidget {
 class _AuthenticationScreenState extends State<AuthenticationScreen> {
   @override
   void initState() {
-    restoreEmailAddress();
     super.initState();
+    restoreEmailAddress();
   }
 
   String? _emailAddress;
   String? _password;
-  final TextEditingController _emailAddressController = TextEditingController();
 
   Future<void> restoreEmailAddress() async {
     final prefs = await SharedPreferences.getInstance();
@@ -28,11 +30,11 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
       return;
     }
 
-    _emailAddressController.text = cachedEmailAddress;
+    widget._emailAddressController.text = cachedEmailAddress;
     _emailAddress = cachedEmailAddress;
   }
 
-  Future<void> signIn(Function(UserCredential) onSuccess) async {
+  Future<void> signInWithEmail(Function(UserCredential) onSuccess) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -45,11 +47,12 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
 
       onSuccess(credential);
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print('No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
-      }
+      Fluttertoast.showToast(
+        msg: e.message ?? "Sign in error: ${e.code}",
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.deepPurple,
+        textColor: Colors.white
+      );
     }
   }
 
@@ -58,7 +61,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
     final bool canLogin = (_emailAddress?.isNotEmpty ?? false) &&
         (_password?.isNotEmpty ?? false);
 
-    onPressed() => signIn(
+    onPressed() => signInWithEmail(
           (credential) => Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => Text(
@@ -75,7 +78,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
         children: [
           const _AuthenticationHeader(),
           TextInputWidget(
-            controller: _emailAddressController,
+            controller: widget._emailAddressController,
             label: "Email",
             hintText: "example@email.com",
             onChanged: (emailAddress) =>
