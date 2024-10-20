@@ -9,8 +9,12 @@ import '../main.dart';
 abstract class AuthService {
   Future<User?> getCurrentUser();
 
-  Future<void> signIn(Function(UserCredential) onSuccess,
+  Future<void> signInWithEmail(Function(UserCredential) onSuccess,
       {required emailAddress, required password});
+
+  Future<void> signInAsGuest(Function(UserCredential) onSuccess);
+
+  Future<void> signOut(Function(void) onSuccess);
 
   Future<void> signUp(Function(UserCredential) onSuccess,
       {required emailAddress, required password});
@@ -24,12 +28,12 @@ class AuthServiceImpl implements AuthService {
   Future<User?> getCurrentUser() async => _firebaseAuth.currentUser;
 
   @override
-  Future<void> signIn(Function(UserCredential) onSuccess,
-      {required emailAddress, required password}) async {
-    try {
-      final credential = await _firebaseAuth.signInWithEmailAndPassword(
-          email: emailAddress, password: password);
-
+  Future<void> signInWithEmail(
+    Function(UserCredential) onSuccess, {
+    required emailAddress,
+    required password,
+  }) async {
+    onValue(credential) async {
       final userEmail = credential.user?.email;
       if (userEmail != null) {
         final prefs = await getIt.getAsync<SharedPreferences>();
@@ -37,22 +41,58 @@ class AuthServiceImpl implements AuthService {
       }
 
       onSuccess(credential);
-    } on FirebaseAuthException catch (e) {
-      Fluttertoast.showToast(
-          msg: e.message ?? "Sign in error: ${e.code}",
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.deepPurple,
-          textColor: Colors.white);
     }
+
+    onError(e) {
+      Fluttertoast.showToast(
+        msg: e.message ?? "Sign in error: ${e.code}",
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.deepPurple,
+        textColor: Colors.white,
+      );
+    }
+
+    await _firebaseAuth
+        .signInWithEmailAndPassword(email: emailAddress, password: password)
+        .then(onValue, onError: onError);
+  }
+
+  @override
+  Future<void> signInAsGuest(Function(UserCredential p1) onSuccess) async {
+    onValue(credential) {
+      onSuccess(credential);
+    }
+
+    onError(e) {
+      Fluttertoast.showToast(
+        msg: e.message ?? "Sign in error: ${e.code}",
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.deepPurple,
+        textColor: Colors.white,
+      );
+    }
+
+    await _firebaseAuth.signInAnonymously().then(onValue, onError: onError);
+  }
+
+  @override
+  Future<void> signOut(Function(void) onSuccess) async {
+    onError(e) {
+      Fluttertoast.showToast(
+        msg: e.message ?? "Sign out error: ${e.code}",
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.deepPurple,
+        textColor: Colors.white,
+      );
+    }
+
+    await _firebaseAuth.signOut().then(onSuccess, onError: onError);
   }
 
   @override
   Future<void> signUp(Function(UserCredential) onSuccess,
       {required emailAddress, required password}) async {
-    try {
-      final credential = await _firebaseAuth.createUserWithEmailAndPassword(
-          email: emailAddress, password: password);
-
+    onValue(credential) async {
       Fluttertoast.showToast(
         msg: "Account created successfully",
         gravity: ToastGravity.BOTTOM,
@@ -67,7 +107,9 @@ class AuthServiceImpl implements AuthService {
       }
 
       onSuccess(credential);
-    } on FirebaseAuthException catch (e) {
+    }
+
+    onError(e) {
       Fluttertoast.showToast(
         msg: e.message ?? "Sign up error: ${e.code}",
         gravity: ToastGravity.BOTTOM,
@@ -75,5 +117,9 @@ class AuthServiceImpl implements AuthService {
         textColor: Colors.white,
       );
     }
+
+    await _firebaseAuth
+        .createUserWithEmailAndPassword(email: emailAddress, password: password)
+        .then(onValue, onError: onError);
   }
 }
