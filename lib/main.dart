@@ -26,7 +26,7 @@ Future<void> main() async {
 
 Future<Widget> getStartPage() async {
   final currentUser = await getIt<AuthService>().getCurrentUser();
-  return currentUser == null ? SignInScreen() : const HomeScreen();
+  return currentUser == null ? const SignInScreen() : const HomeScreen();
 }
 
 class QuicknoteApp extends StatelessWidget {

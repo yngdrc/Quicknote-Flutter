@@ -11,9 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 
 class SignInScreen extends StatefulWidget {
-  SignInScreen({super.key});
-
-  final TextEditingController _emailAddressController = TextEditingController();
+  const SignInScreen({super.key});
 
   @override
   State<StatefulWidget> createState() => _SignInScreenState();
@@ -28,6 +26,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   String? _emailAddress;
   String? _password;
+  final TextEditingController _emailAddressController = TextEditingController();
 
   Future<void> restoreEmailAddress() async {
     final prefs = await getIt.getAsync<SharedPreferences>();
@@ -36,24 +35,32 @@ class _SignInScreenState extends State<SignInScreen> {
       return;
     }
 
-    widget._emailAddressController.text = cachedEmailAddress;
+    _emailAddressController.text = cachedEmailAddress;
     _emailAddress = cachedEmailAddress;
   }
+
+  Future<void> signInWithEmail() => getIt<AuthService>().signInWithEmail(
+        emailAddress: _emailAddress,
+        password: _password,
+        (credential) => Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
+        ),
+      );
+
+  Future<void> signInAsGuest() => getIt<AuthService>().signInAsGuest(
+        (credential) => Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
     final bool canLogin = (_emailAddress?.isNotEmpty ?? false) &&
         (_password?.isNotEmpty ?? false);
-
-    onPressed() => getIt<AuthService>().signIn(
-          emailAddress: _emailAddress,
-          password: _password,
-          (credential) => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const HomeScreen(),
-            ),
-          ),
-        );
 
     return Scaffold(
       body: Center(
@@ -63,7 +70,7 @@ class _SignInScreenState extends State<SignInScreen> {
           children: [
             const AuthenticationHeader(),
             TextInputWidget(
-              controller: widget._emailAddressController,
+              controller: _emailAddressController,
               label: "Email",
               hintText: "example@email.com",
               onChanged: (emailAddress) =>
@@ -78,7 +85,7 @@ class _SignInScreenState extends State<SignInScreen> {
             Padding(
               padding: const EdgeInsets.all(20),
               child: FilledButton(
-                onPressed: canLogin ? onPressed : null,
+                onPressed: canLogin ? signInWithEmail : null,
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(double.infinity, 40),
                   backgroundColor: QuicknoteColors.blackShade2,
@@ -126,14 +133,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         color: Colors.deepPurple,
                         fontSize: 11,
                       ),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () {
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => const HomeScreen(),
-                            ),
-                          );
-                        },
+                      recognizer: TapGestureRecognizer()..onTap = signInAsGuest,
                     ),
                   ],
                 ),

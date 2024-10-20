@@ -5,7 +5,6 @@ import 'package:quicknote/authentication/signin_screen.dart';
 import 'package:quicknote/authentication/widgets_authentication.dart';
 import 'package:quicknote/home/home_screen.dart';
 
-import '../colors/quicknote_colors.dart';
 import '../main.dart';
 import '../widgets_common.dart';
 
@@ -21,22 +20,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _password;
   String? _confirmPassword;
 
+  Future<void> signUp() => getIt<AuthService>().signUp(
+      emailAddress: _emailAddress,
+      password: _password,
+      (credential) => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const HomeScreen(),
+            ),
+          ));
+
   @override
   Widget build(BuildContext context) {
     final bool canLogin = (_emailAddress?.isNotEmpty ?? false) &&
         (_password?.isNotEmpty ?? false) &&
         (_confirmPassword?.isNotEmpty ?? false) &&
         _password == _confirmPassword;
-
-    onPressed() => getIt<AuthService>().signUp(
-          emailAddress: _emailAddress,
-          password: _password,
-          (credential) => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const HomeScreen(),
-            ),
-          ),
-        );
 
     return Scaffold(
       body: Center(
@@ -67,7 +65,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             Padding(
               padding: const EdgeInsets.all(20),
               child: FilledButton(
-                onPressed: canLogin ? onPressed : null,
+                onPressed: canLogin ? signUp : null,
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(double.infinity, 40),
                   shape: RoundedRectangleBorder(
@@ -93,17 +91,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     TextSpan(
                       text: "Sign in",
                       style: const TextStyle(
-                        color: QuicknoteColors.blackShade2,
+                        color: Colors.deepPurple,
                         fontSize: 11,
                       ),
                       recognizer: TapGestureRecognizer()
-                        ..onTap = () {
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => SignInScreen(),
+                        ..onTap = () => Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => const SignInScreen(),
+                              ),
                             ),
-                          );
-                        },
                     ),
                   ],
                 ),
