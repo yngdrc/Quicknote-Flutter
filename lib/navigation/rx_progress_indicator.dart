@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
-class RxProgressIndicator extends StatefulWidget
-    implements PreferredSizeWidget {
+class RxProgressIndicator extends StatefulWidget {
   const RxProgressIndicator({super.key, required this.operationRelay});
 
   final PublishSubject<bool> operationRelay;
 
   @override
   State<StatefulWidget> createState() => _RxProgressIndicatorState();
-
-  @override
-  Size get preferredSize => const Size.fromHeight(3);
 }
 
 class _RxProgressIndicatorState extends State<RxProgressIndicator> {
@@ -24,8 +20,15 @@ class _RxProgressIndicatorState extends State<RxProgressIndicator> {
 
   @override
   void initState() {
-    super.initState();
     widget.operationRelay.listen(setIsLoading).addTo(subscriptions);
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant RxProgressIndicator oldWidget) {
+    subscriptions.clear();
+    widget.operationRelay.listen(setIsLoading).addTo(subscriptions);
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -36,9 +39,12 @@ class _RxProgressIndicatorState extends State<RxProgressIndicator> {
 
   @override
   Widget build(BuildContext context) {
-    return LinearProgressIndicator(
-      color: Colors.deepPurple,
-      value: _isLoading ? null : 0.0,
+    return Visibility(
+      visible: _isLoading,
+      child: const LinearProgressIndicator(
+        backgroundColor: Colors.transparent,
+        color: Colors.deepPurple,
+      ),
     );
   }
 }
