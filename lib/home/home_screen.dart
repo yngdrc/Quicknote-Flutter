@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:quicknote/navigation/navigation_screen.dart';
-import 'package:quicknote/navigation/rx_progress_indicator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,16 +10,24 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late NavigationScreen _currentScreen = Destination.settings.navigationScreen;
+  NavigationScreen _currentScreen = Destination.notesList.navigationScreen;
 
-  void openDrawer() => _scaffoldKey.currentState!.openDrawer();
+  void onLeadingActionClicked() {
+    _scaffoldKey.currentState!.openDrawer();
+  }
 
-  void onDestinationSelected(Destination destination) {
-    if (_currentScreen.destination == destination) {
+  void onDestinationSelected(int index) {
+    final destination = getDestinationByIndex(index);
+    if (destination == null || _currentScreen.destination == destination) {
       return;
     }
 
     setState(() => _currentScreen = destination.navigationScreen);
+  }
+
+  Future<void> onFabPressed() {
+    // TODO navigate to note form
+    throw UnimplementedError();
   }
 
   @override
@@ -32,29 +39,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _currentScreen.destination.name,
         ),
         leading: IconButton(
-          onPressed: openDrawer,
-          icon: const Icon(Icons.menu_rounded),
-        ),
-        bottom: RxProgressIndicator(
-          operationRelay: _currentScreen.operationRelay,
+          onPressed: onLeadingActionClicked,
+          icon: const Icon(
+            Icons.menu,
+          ),
         ),
       ),
+      drawerEnableOpenDragGesture: false,
       drawer: NavigationDrawer(
-        onDestinationSelected: (index) {
-          final destination = getDestinationByIndex(index);
-          if (destination == null) {
-            return;
-          }
-
-          onDestinationSelected(destination);
-        },
+        onDestinationSelected: (index) => onDestinationSelected(index),
         selectedIndex: _currentScreen.destination.index,
         children: [
-          NavigationDrawerDestination(
-            icon: Icon(Destination.settings.iconData),
-            label: Text(Destination.settings.name),
+          ...Destination.values.map(
+            (destination) {
+              return NavigationDrawerDestination(
+                icon: Icon(destination.iconData),
+                label: Text(destination.name),
+              );
+            },
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: onFabPressed,
+        child: const Icon(Icons.add),
       ),
       body: _currentScreen,
     );
