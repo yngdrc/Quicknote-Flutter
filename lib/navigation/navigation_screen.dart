@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:quicknote/notes/notes_list_screen.dart';
 import 'package:quicknote/settings/settings_screen.dart';
-import 'package:rxdart/rxdart.dart';
 
 abstract class NavigationScreen extends Widget {
   const NavigationScreen({
     super.key,
-    required this.destination,
-    required this.operationRelay,
+    required this.destination
   });
 
   final Destination destination;
-  final PublishSubject<bool> operationRelay;
 }
 
 enum Destination {
+  notesList(name: "Notes", iconData: Icons.notes),
   settings(name: "Settings", iconData: Icons.settings);
 
   const Destination({required this.name, required this.iconData});
@@ -25,9 +24,11 @@ enum Destination {
 }
 
 NavigationScreen? getNavigationScreenByIndex(int index) {
-  final destination = Destination.values.firstWhere((destination) => true);
+  final destination = getDestinationByIndex(index);
   if (destination == Destination.settings) {
     return SettingsScreen();
+  } else if (destination == Destination.notesList) {
+    return NotesListScreen();
   } else {
     return null;
   }
