@@ -8,26 +8,65 @@ class HomeScreen extends StatefulWidget {
   State<StatefulWidget> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  NavigationScreen _currentScreen = Destination.notesList.navigationScreen;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  Destination _currentDestination = DrawerDestination.notesList;
 
-  void onLeadingActionClicked() {
-    _scaffoldKey.currentState!.openDrawer();
+  void _onLeadingActionClicked() {
+    if (_navigatorKey.currentState?.canPop() != true) {
+      return _scaffoldKey.currentState!.openDrawer();
+    }
+
+    final currentDestination = _currentDestination;
+    if (currentDestination is ChildDestination) {
+      setState(
+              () => _currentDestination = currentDestination.parentDestination);
+    }
+
+    return _navigatorKey.currentState?.pop();
   }
 
-  void onDestinationSelected(int index) {
-    final destination = getDestinationByIndex(index);
-    if (destination == null || _currentScreen.destination == destination) {
+  void _onDestinationSelected(int index) {
+    final destination = DrawerDestination.values[index];
+    navigateTo(destination);
+  }
+
+  void navigateTo(Destination destination) {
+    if (_currentDestination == destination) {
       return;
     }
 
-    setState(() => _currentScreen = destination.navigationScreen);
+    MaterialPageRoute route = MaterialPageRoute(
+      builder: (context) => destination.getNavigationScreen(navigateTo),
+    );
+
+    if (destination is DrawerDestination) {
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        route,
+        (route) => false,
+      );
+    } else if (destination is ChildDestination) {
+      _navigatorKey.currentState?.push(
+        route,
+      );
+    }
+
+    setState(() => _currentDestination = destination);
   }
 
-  Future<void> onFabPressed() {
-    // TODO navigate to note form
-    throw UnimplementedError();
+  int? _getSelectedDrawerDestinationIndex(Destination currentDestination) {
+    if (currentDestination is DrawerDestination) {
+      return currentDestination.index;
+    } else if (currentDestination is ChildDestination) {
+      return currentDestination.drawerDestination.index;
+    } else {
+      return null;
+    }
+  }
+
+  bool _canNavigateBack() {
+    return _navigatorKey.currentState?.canPop() == true;
   }
 
   @override
@@ -36,21 +75,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       key: _scaffoldKey,
       appBar: AppBar(
         title: Text(
-          _currentScreen.destination.name,
+          _currentDestination.name,
         ),
         leading: IconButton(
-          onPressed: onLeadingActionClicked,
-          icon: const Icon(
-            Icons.menu,
+          onPressed: _onLeadingActionClicked,
+          icon: Icon(
+            _canNavigateBack() ? Icons.chevron_left : Icons.menu,
           ),
         ),
       ),
       drawerEnableOpenDragGesture: false,
       drawer: NavigationDrawer(
-        onDestinationSelected: (index) => onDestinationSelected(index),
-        selectedIndex: _currentScreen.destination.index,
+        onDestinationSelected: (index) => _onDestinationSelected(index),
+        selectedIndex: _getSelectedDrawerDestinationIndex(_currentDestination),
         children: [
-          ...Destination.values.map(
+          ...DrawerDestination.values.map(
             (destination) {
               return NavigationDrawerDestination(
                 icon: Icon(destination.iconData),
@@ -60,11 +99,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: onFabPressed,
-        child: const Icon(Icons.add),
+      body: Navigator(
+        key: _navigatorKey,
+        onGenerateRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (context) =>
+                _currentDestination.getNavigationScreen(navigateTo),
+            settings: settings,
+          );
+        },
       ),
-      body: _currentScreen,
     );
   }
 }

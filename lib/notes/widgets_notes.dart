@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'note_model.dart';
+import 'list/note_model.dart';
 
 class NoteListItem extends StatelessWidget {
   const NoteListItem({super.key, required this.note});

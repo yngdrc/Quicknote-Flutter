@@ -6,10 +6,13 @@ import 'package:quicknote/navigation/navigation_screen.dart';
 import 'package:quicknote/settings/widgets_settings.dart';
 
 class SettingsScreen extends StatelessWidget implements NavigationScreen {
-  SettingsScreen({super.key});
+  SettingsScreen({super.key, required this.navigateTo});
 
   @override
-  final Destination destination = Destination.settings;
+  final Destination destination = DrawerDestination.settings;
+
+  @override
+  final Function(Destination) navigateTo;
 
   AsyncWidgetBuilder<User?> get builder =>
       (BuildContext context, AsyncSnapshot<User?> snapshot) {
